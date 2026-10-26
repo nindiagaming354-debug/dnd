@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DnD VTT — Masuk Sesi</title>
+<link rel="stylesheet" href="/style.css">
+<script>(function(){ try { var t = localStorage.getItem('dnd_vtt_theme'); if (t !== 'light') document.documentElement.dataset.theme = 'dark'; } catch(e){} })();</script>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="landing">
+  <div class="card sheet landing-sheet">
+    <div class="landing-header">
+      <h1 class="display landing-title">DnD VTT</h1>
+      <div class="rpg-divider"><span>⚔</span></div>
+      <p class="hint serif landing-subtitle">Character sheet &amp; virtual tabletop lokal</p>
+    </div>
+
+    <div id="roleChoice">
+      <div class="role-tiles">
+        <button type="button" id="btnBeDM" class="role-tile role-tile-dm">
+          <span class="role-tile-icon">🐉</span>
+          <span class="role-tile-title">Dungeon Master</span>
+          <span class="role-tile-desc">Buka &amp; kendalikan sesi, ceritakan dunianya</span>
+        </button>
+        <button type="button" id="btnBePlayer" class="role-tile role-tile-player">
+          <span class="role-tile-icon">🛡</span>
+          <span class="role-tile-title">Player</span>
+          <span class="role-tile-desc">Gabung sesi &amp; mainkan karaktermu</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==== DM FLOW ==== -->
+    <div id="dmFlow" class="landing-flow" style="display:none;">
+      <p class="landing-flow-title">🐉 Dungeon Master</p>
+      <div class="field">
+        <label for="dmName">Nama DM</label>
+        <input type="text" id="dmName" placeholder="cth. Kak Rio">
+      </div>
+      <button id="btnCreateSession" style="width:100%;">Buat Sesi Baru</button>
+
+      <div class="rpg-divider"><span>atau lanjutkan sesi</span></div>
+
+      <div class="field">
+        <label for="dmRejoinName">Nama DM</label>
+        <input type="text" id="dmRejoinName" placeholder="Nama yang dipakai waktu buat sesi ini">
+      </div>
+      <div class="field">
+        <label for="dmRejoinCode">Kode Sesi</label>
+        <input type="text" id="dmRejoinCode" maxlength="5" placeholder="cth. K7X2P" style="text-transform:uppercase;">
+      </div>
+      <button id="btnRejoinSession" class="secondary" style="width:100%;">Lanjutkan Sesi</button>
+      <p class="error-msg" id="dmError"></p>
+      <button id="btnBackFromDM" class="secondary small landing-back">&larr; kembali</button>
+    </div>
+
+    <!-- ==== PLAYER FLOW ==== -->
+    <div id="playerFlow" class="landing-flow" style="display:none;">
+      <p class="landing-flow-title">🛡 Player</p>
+      <div class="field">
+        <label for="pName">Nama Kamu</label>
+        <input type="text" id="pName" placeholder="cth. Arwen">
+      </div>
+      <div class="field">
+        <label for="pCode">Kode Sesi dari DM</label>
+        <input type="text" id="pCode" maxlength="5" placeholder="cth. K7X2P" style="text-transform:uppercase;">
+      </div>
+      <button id="btnJoinSession" style="width:100%;">Gabung Sesi</button>
+      <p class="error-msg" id="pError"></p>
+      <button id="btnBackFromPlayer" class="secondary small landing-back">&larr; kembali</button>
+    </div>
+
+    <p class="landing-footer">✦ Kisah dimulai begitu kau melangkah masuk ✦</p>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+const roleChoice = document.getElementById('roleChoice');
+const dmFlow = document.getElementById('dmFlow');
+const playerFlow = document.getElementById('playerFlow');
+
+document.getElementById('btnBeDM').onclick = () => { roleChoice.style.display='none'; dmFlow.style.display='block'; };
+document.getElementById('btnBePlayer').onclick = () => { roleChoice.style.display='none'; playerFlow.style.display='block'; };
+document.getElementById('btnBackFromDM').onclick = () => { dmFlow.style.display='none'; roleChoice.style.display='block'; };
+document.getElementById('btnBackFromPlayer').onclick = () => { playerFlow.style.display='none'; roleChoice.style.display='block'; };
+
+document.getElementById('btnCreateSession').onclick = () => {
+  const dmName = document.getElementById('dmName').value.trim() || 'Dungeon Master';
+  socket.emit('dm:create-session', { dmName }, (res) => {
+    if (!res.ok) { document.getElementById('dmError').textContent = res.error || 'Gagal membuat sesi.'; return; }
+    localStorage.setItem('dnd_dm_code', res.code);
+    localStorage.setItem('dnd_dm_name', dmName);
+    location.href = '/dm.html';
+  });
+};
+
+document.getElementById('btnRejoinSession').onclick = () => {
+  const dmName = document.getElementById('dmRejoinName').value.trim();
+  const code = document.getElementById('dmRejoinCode').value.trim().toUpperCase();
+  if (!dmName) { document.getElementById('dmError').textContent = 'Isi nama DM dulu ya.'; return; }
+  if (!code) { document.getElementById('dmError').textContent = 'Isi kode sesi dulu ya.'; return; }
+  socket.emit('dm:rejoin-session', { code, dmName }, (res) => {
+    if (!res.ok) { document.getElementById('dmError').textContent = res.error; return; }
+    localStorage.setItem('dnd_dm_code', code);
+    localStorage.setItem('dnd_dm_name', dmName);
+    location.href = '/dm.html';
+  });
+};
+
+document.getElementById('btnJoinSession').onclick = () => {
+  const name = document.getElementById('pName').value.trim();
+  const code = document.getElementById('pCode').value.trim().toUpperCase();
+  if (!name || !code) { document.getElementById('pError').textContent = 'Isi nama dan kode sesi dulu ya.'; return; }
+  const savedId = localStorage.getItem('dnd_player_id_' + code) || null;
+  socket.emit('player:join-session', { code, name, playerId: savedId }, (res) => {
+    if (!res.ok) { document.getElementById('pError').textContent = res.error; return; }
+    localStorage.setItem('dnd_player_code', code);
+    localStorage.setItem('dnd_player_name', name);
+    localStorage.setItem('dnd_player_id_' + code, res.playerId);
+    location.href = '/character.html';
+  });
+};
+
+// enter-to-submit
+document.getElementById('pCode').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btnJoinSession').click(); });
+document.getElementById('dmRejoinCode').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btnRejoinSession').click(); });
+document.getElementById('dmRejoinName').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btnRejoinSession').click(); });
+
+// prefill nama DM terakhir biar gak ngetik ulang tiap kali lanjut sesi
+const savedDmName = localStorage.getItem('dnd_dm_name');
+if (savedDmName) document.getElementById('dmRejoinName').value = savedDmName;
+</script>
+<script src="/fx.js"></script>
+</body>
+</html>

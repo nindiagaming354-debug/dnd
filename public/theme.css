@@ -1,0 +1,381 @@
+/* theme.css — "Lantern table"
+ *
+ * Lapisan tampilan di atas style.css (dimuat PALING AKHIR di tiap halaman).
+ * Ide: UI ikut "diterangi" seperti peta yang diterangi lampu. Permukaan slate gelap,
+ * amber lampu hanya dipakai untuk hal yang MENYALA: tab aktif, giliran aktif, fokus, token milikmu.
+ * Tema Night (default, ruangan redup) dan Day (terang, dingin). Font dipasang lokal (/fonts) supaya
+ * tetap benar saat main tanpa internet.
+ *
+ * Semua gerak dibungkus prefers-reduced-motion: no-preference.
+ */
+
+@font-face { font-family: 'Grenze'; font-weight: 600; font-style: normal; font-display: swap; src: url('/fonts/grenze-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Grenze'; font-weight: 700; font-style: normal; font-display: swap; src: url('/fonts/grenze-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 400; font-style: normal; font-display: swap; src: url('/fonts/atkinson-hyperlegible-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 400; font-style: italic; font-display: swap; src: url('/fonts/atkinson-hyperlegible-latin-400-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 700; font-style: normal; font-display: swap; src: url('/fonts/atkinson-hyperlegible-latin-700-normal.woff2') format('woff2'); }
+
+/* ---------------------------------------------------------------- token: Day */
+:root {
+  --bg: #e7eaf0;
+  --parchment: #ffffff;        /* permukaan panel */
+  --parchment-dark: #eef1f6;   /* area cekung: input, log */
+  --raise: #f6f8fb;            /* permukaan terangkat: tombol, baris */
+  --raise-hover: #e9eef6;
+  --ink: #19202e;
+  --ink-soft: #576179;
+  --line: #cbd3df;
+  --line-soft: #dde2eb;
+  --navy: #2b3548;
+  --navy-deep: #161c28;
+  --gold: #cbd3df;             /* dulu emas; kini garis tipis (nama dipertahankan untuk gaya inline lama) */
+  --gold-bright: #9a5806;      /* dulu emas terang; kini teks aksen lampu */
+  --lantern: #b9700c;
+  --lantern-soft: rgba(185, 112, 12, .10);
+  --lantern-glow: rgba(185, 112, 12, .30);
+  --moon: #2f6fb0;   --moon-soft: rgba(47, 111, 176, .12);
+  --moss: #2c7a50;   --moss-soft: rgba(44, 122, 80, .12);
+  --ember: #c0402f;  --ember-soft: rgba(192, 64, 47, .10);
+  --arcane: #6d58b8; --arcane-soft: rgba(109, 88, 184, .12);
+  --stamina: #b88a12;
+  --crimson: #b8473a; --crimson-bright: #c0402f;
+  --emerald: #2c7a50; --sapphire: #2f6fb0;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(20, 30, 50, .07), 0 10px 28px rgba(20, 30, 50, .08);
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --font-display: 'Grenze', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------------- token: Night */
+html[data-theme="dark"] {
+  --bg: #11141a;
+  --parchment: #1a1e26;
+  --parchment-dark: #12151b;
+  --raise: #232834;
+  --raise-hover: #2c3342;
+  --ink: #e9e4d8;
+  --ink-soft: #a9a496;
+  --line: #343b4b;
+  --line-soft: #272d3a;
+  --navy: #2a3142;
+  --navy-deep: #0d1015;
+  --gold: #343b4b;
+  --gold-bright: #f0b35a;
+  --lantern: #f0b35a;
+  --lantern-soft: rgba(240, 179, 90, .10);
+  --lantern-glow: rgba(240, 179, 90, .30);
+  --moon: #7fb2e5;   --moon-soft: rgba(127, 178, 229, .14);
+  --moss: #6fbf8a;   --moss-soft: rgba(111, 191, 138, .14);
+  --ember: #ef6f5c;  --ember-soft: rgba(239, 111, 92, .14);
+  --arcane: #a995e8; --arcane-soft: rgba(169, 149, 232, .16);
+  --stamina: #e2c15a;
+  --crimson: #a4402f; --crimson-bright: #ef6f5c;
+  --emerald: #3f9a67; --sapphire: #4a82c4;
+  --shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 12px 32px rgba(0, 0, 0, .38);
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------- dasar */
+html, body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+body { background: var(--bg); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--lantern-glow); color: var(--ink); }
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* Cahaya latar: lentera hangat di kiri atas, cahaya bulan dingin di kanan atas */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; mix-blend-mode: normal;
+  background-image:
+    radial-gradient(900px 560px at 10% -8%, var(--lantern-glow), transparent 62%),
+    radial-gradient(760px 480px at 102% -4%, var(--moon-soft), transparent 64%);
+  background-repeat: no-repeat;
+  opacity: .55;
+}
+html[data-theme="dark"] body::before { opacity: 1; }
+.sheet, .dm-shell, .landing { position: relative; z-index: 1; }
+
+h1, h2, h3, .display { font-family: var(--font-display); font-weight: 600; letter-spacing: .005em; text-transform: none; color: var(--ink); }
+.serif { font-family: var(--font-body); }
+a { color: var(--lantern); }
+.hint { font-family: var(--font-body); font-size: 12.5px; font-style: normal; color: var(--ink-soft); letter-spacing: 0; text-transform: none; }
+label { font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--ink-soft); }
+hr { border: 0; border-top: 1px solid var(--line-soft); }
+
+/* ---------------------------------------------------------------- bingkai halaman */
+.sheet {
+  max-width: 1400px; margin: 20px auto; padding: 22px;
+  background: var(--parchment); background-image: none;
+  border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+}
+.sheet::before, .sheet::after, .sheet .corner { display: none; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  background: transparent; border: 0; border-bottom: 1px solid var(--line-soft); border-radius: 0; box-shadow: none;
+  padding: 2px 2px 14px; margin-bottom: 16px; color: var(--ink);
+}
+.topbar h1 { font-size: 27px; font-weight: 700; color: var(--ink); text-shadow: none; }
+.topbar .actions { gap: 8px; flex-wrap: wrap; }
+.topbar .actions .hint { color: var(--ink-soft) !important; }
+.code-badge, .topbar .code-badge {
+  font-family: var(--font-body); font-weight: 700; font-size: 15px; letter-spacing: .26em; padding: 5px 14px 5px 18px;
+  color: var(--lantern); background: var(--lantern-soft); border: 1px solid var(--lantern); border-radius: 999px; box-shadow: none;
+}
+
+.panel {
+  background: var(--parchment); background-image: none; border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: var(--shadow); padding: 14px; margin-bottom: 16px;
+}
+.panel-header {
+  background: transparent; box-shadow: none; color: var(--ink); border-radius: 0;
+  font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: .005em; text-transform: none; text-align: left;
+  padding: 10px 16px 11px; margin: -14px -14px 12px; border-bottom: 1px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.panel-header::before, .panel-header::after { display: none; content: none; }
+
+/* ---------------------------------------------------------------- form */
+input[type=text], input[type=number], input[type=password], input[type=search], input[type=email], input[type=url], textarea, select {
+  background: var(--parchment-dark); color: var(--ink); border: 1px solid var(--line); border-radius: 9px;
+  font-family: var(--font-body); font-size: 14px; padding: 8px 11px;
+  transition: border-color .15s, box-shadow .2s, background-color .15s;
+}
+input::placeholder, textarea::placeholder { color: var(--ink-soft); opacity: .65; }
+input:hover, textarea:hover, select:hover { border-color: var(--ink-soft); }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--lantern); box-shadow: 0 0 0 3px var(--lantern-glow); background: var(--parchment-dark); }
+input[readonly], textarea[readonly] { background: transparent; color: var(--ink-soft); border-style: dashed; }
+select {
+  appearance: none; -webkit-appearance: none; padding-right: 32px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' fill='none' stroke='%23a9a496' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat; background-position: right 11px center;
+}
+select option { background: var(--parchment); color: var(--ink); }
+input[type=range], input[type=checkbox], input[type=radio] { accent-color: var(--lantern); }
+input[type=file] { color: var(--ink-soft); font-family: var(--font-body); font-size: 13px; }
+input[type=file]::file-selector-button {
+  font: inherit; font-weight: 700; font-size: 12px; color: var(--ink); background: var(--raise); border: 1px solid var(--line);
+  border-radius: 8px; padding: 5px 10px; margin-right: 8px; cursor: pointer;
+}
+input[type=file]::file-selector-button:hover { background: var(--raise-hover); }
+
+/* ---------------------------------------------------------------- tombol */
+button, .btn {
+  font-family: var(--font-body); font-weight: 700; font-size: 13px; letter-spacing: 0; text-transform: none; text-shadow: none;
+  color: var(--ink); background: var(--raise); background-image: none; border: 1px solid var(--line); border-radius: 10px;
+  padding: 7px 14px; cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 1px 2px rgba(0, 0, 0, .18);
+  transition: background-color .15s, border-color .15s, box-shadow .2s, transform .12s var(--ease), color .15s;
+}
+button:hover, .btn:hover { background: var(--raise-hover); background-image: none; border-color: var(--lantern); box-shadow: 0 0 0 3px var(--lantern-soft), 0 1px 2px rgba(0, 0, 0, .18); }
+button:active, .btn:active { transform: translateY(1px) scale(.975); box-shadow: none; }
+button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+button.secondary { background: transparent; background-image: none; box-shadow: none; color: var(--ink-soft); border-color: var(--line); }
+button.secondary:hover { background: var(--raise); color: var(--ink); }
+button.danger { background: var(--ember-soft); background-image: none; color: var(--ember); border-color: var(--ember); box-shadow: none; }
+button.danger:hover { background: var(--ember); color: #1a0a07; box-shadow: 0 0 0 3px var(--ember-soft); }
+button.small { padding: 3px 10px; font-size: 12px; border-radius: 8px; }
+.icon-btn { border-radius: 10px; }
+.icon-btn.icon-export { background: var(--moss-soft); border-color: var(--moss); color: var(--moss); }
+.icon-btn.icon-import { background: var(--moon-soft); border-color: var(--moon); color: var(--moon); }
+:focus-visible { outline: 2px solid var(--lantern); outline-offset: 2px; }
+button:focus-visible, .btn:focus-visible { outline-offset: 1px; }
+
+/* ---------------------------------------------------------------- tab */
+.page-tabs {
+  display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 16px; padding: 4px;
+  background: var(--parchment-dark); border: 1px solid var(--line-soft); border-radius: 14px;
+}
+.page-tabs button {
+  position: relative; flex: 0 1 auto; background: transparent; border: 1px solid transparent; box-shadow: none; border-radius: 10px;
+  color: var(--ink-soft); padding: 8px 14px; font-weight: 700; font-size: 13px;
+}
+.page-tabs button:hover { background: var(--raise); color: var(--ink); border-color: transparent; box-shadow: none; }
+.page-tabs button.active { background: var(--raise); color: var(--ink); border-color: var(--line); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.page-tabs button::after {
+  content: ""; position: absolute; left: 14px; right: 14px; bottom: 3px; height: 2px; border-radius: 2px; background: var(--lantern);
+  box-shadow: 0 0 10px var(--lantern); transform: scaleX(0); opacity: 0; transition: transform .28s var(--ease), opacity .2s;
+}
+.page-tabs button.active::after { transform: scaleX(1); opacity: 1; }
+.page-tabs.sub-tabs button { padding: 5px 12px; font-size: 12px; }
+.map-tabs-bar button, .map-tab-bar button { background: var(--raise); color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; }
+.map-tabs-bar button.active, .map-tab-bar button.active { background: var(--lantern-soft); color: var(--lantern); border-color: var(--lantern); }
+
+/* ---------------------------------------------------------------- badge, pill, daftar */
+.badge { font-family: var(--font-body); font-weight: 700; font-size: 11.5px; letter-spacing: 0; text-transform: none; padding: 3px 10px; border-radius: 999px; background: var(--raise); color: var(--ink-soft); border: 1px solid var(--line); }
+.badge.online { background: var(--moss-soft); color: var(--moss); border-color: var(--moss); }
+.badge.offline { background: transparent; color: var(--ink-soft); }
+.type-pill { font-family: var(--font-body); font-weight: 700; font-size: 11px; letter-spacing: 0; text-transform: none; padding: 1px 9px; border-radius: 999px; box-shadow: none; border: 1px solid transparent; }
+.type-pill.pc { background: var(--moon-soft); color: var(--moon); border-color: var(--moon); }
+.type-pill.ally { background: var(--moss-soft); color: var(--moss); border-color: var(--moss); }
+.type-pill.enemy { background: var(--ember-soft); color: var(--ember); border-color: var(--ember); }
+.list-item:hover { background: var(--lantern-soft); }
+.elem-badge { background: var(--raise); color: var(--ink-soft); border-radius: 999px; padding: 1px 8px; }
+
+.data-table th { background: var(--parchment-dark); color: var(--ink-soft); font-family: var(--font-body); font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: 0; border-bottom: 1px solid var(--line); }
+.data-table td { border-bottom: 1px solid var(--line-soft); }
+.data-table tr:hover td { background: var(--lantern-soft); }
+
+.npc-subpanel, .battle-add-box { border: 1px dashed var(--line); border-radius: 12px; background: transparent; }
+.npc-subpanel-title { font-family: var(--font-body); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink-soft); font-weight: 700; }
+.give-item-box { background: var(--lantern-soft); border: 1px solid var(--line); border-radius: 12px; }
+.music-item, .quest-card { background: var(--raise); border: 1px solid var(--line-soft); border-radius: 12px; }
+.music-item.playing { background: var(--lantern-soft); border-color: var(--lantern); }
+.quest-card-title, .story-recap-entry .from { color: var(--ink); }
+.quest-status-badge { font-weight: 700; }
+.quest-status-badge.aktif { background: var(--lantern-soft); color: var(--lantern); }
+.quest-status-badge.selesai { background: var(--moss-soft); color: var(--moss); }
+.quest-status-badge.gagal { background: var(--ember-soft); color: var(--ember); }
+.story-recap-entry { border-bottom: 1px solid var(--line-soft); }
+
+/* ---------------------------------------------------------------- bar HP / MP / SP */
+.hp-bar-wrap, .mini-bar-wrap { height: 8px; background: var(--parchment-dark); border: 0; box-shadow: inset 0 0 0 1px var(--line-soft); border-radius: 999px; overflow: hidden; }
+.hp-bar, .mini-bar-fill { height: 100%; border-radius: 999px; box-shadow: none; transition: width .55s var(--ease), background-color .3s; }
+.hp-bar, .mini-bar-wrap.hp .mini-bar-fill { background: var(--moss); }
+.mini-bar-wrap.mp .mini-bar-fill { background: var(--moon); }
+.mini-bar-wrap.sp .mini-bar-fill { background: var(--stamina); }
+
+/* ---------------------------------------------------------------- battle */
+.battle-row {
+  background: var(--raise); border: 1px solid var(--line-soft); border-radius: 14px; padding: 10px 12px;
+  transition: border-color .25s, box-shadow .35s, background-color .25s;
+}
+.battle-row.active { background: var(--lantern-soft); border-color: var(--lantern); box-shadow: 0 0 0 1px var(--lantern) inset, 0 0 26px var(--lantern-glow); }
+.battle-row .roll-num { background: var(--navy-deep); color: var(--ink); border: 1px solid var(--line); font-family: var(--font-display); font-weight: 700; }
+.battle-row.active .roll-num { background: var(--lantern); color: var(--lantern-ink, #1d1305); border-color: var(--lantern); }
+.battle-row .b-name { font-weight: 700; }
+.turn-flag { background: var(--lantern); color: #1d1305; border-radius: 999px; font-weight: 700; }
+.stepper-btn { background: var(--raise); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; }
+.battle-row input[type=number] { background: var(--parchment-dark); }
+
+/* ---------------------------------------------------------------- chat / dadu */
+.chat-log { background: var(--parchment-dark); color: var(--ink); border: 1px solid var(--line-soft); border-radius: 12px; }
+.chat-log .entry .from { color: var(--ink); }
+.chat-log .entry.roll { color: var(--moon); font-weight: 700; }
+.chat-log .entry.whisper { color: var(--arcane); background: var(--arcane-soft); }
+.chat-log .entry.secret { background: var(--lantern-soft); }
+.chat-log .entry .secret-badge { color: var(--lantern); }
+.chat-log .entry.dm { color: var(--moon); }
+.chat-log .entry.system { color: var(--moss); }
+.chat-log .entry.player { color: var(--ink); }
+.chat-log .entry.damage { color: var(--ember); }
+.chat-log .entry.heal { color: var(--moss); }
+.chat-log .entry.narrative, .chat-log .entry.scene { color: var(--lantern); }
+.chat-log .entry.dialogue { color: var(--moss); }
+.chat-log .entry.quest { color: var(--lantern); }
+.chat-log .entry.handout { color: var(--arcane); }
+.chat-log .entry.starred { background: var(--lantern-soft); }
+.dice-btn { background: var(--raise); border-radius: 999px; padding: 4px 12px; font-variant-numeric: tabular-nums; }
+.dice-btn:hover { background: var(--lantern-soft); }
+
+/* ---------------------------------------------------------------- peta */
+.map-wrap { background-color: #0b0d12; border: 1px solid var(--line); border-radius: 14px; }
+.token-nametag { background: rgba(10, 12, 16, .88); color: #f2ede0; border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px; font-family: var(--font-body); font-weight: 700; }
+.token.mine .token-circle { box-shadow: 0 0 0 3px var(--lantern), 0 0 16px var(--lantern-glow), 0 3px 10px rgba(0, 0, 0, .65); }
+.map-toolbar, .vtt-light-toolbar, .vtt-fog-toolbar { gap: 8px; }
+.geo-tool.active, .geo-tool.on, button.geo-tool.active { background: var(--lantern-soft); color: var(--lantern); border-color: var(--lantern); }
+
+/* ---------------------------------------------------------------- modal, toast */
+.modal-backdrop, .cx-overlay { background: rgba(6, 8, 12, .72); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.modal-box, .cx-modal {
+  background: var(--parchment); color: var(--ink); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+}
+.modal-box h2 { font-family: var(--font-display); color: var(--ink); font-size: 24px; }
+.item-toast .toast-entry, #cxToast {
+  background: var(--raise); color: var(--ink); border: 1px solid var(--lantern); border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .4), 0 0 0 4px var(--lantern-soft); font-family: var(--font-body); font-weight: 700;
+}
+.music-bar { background: var(--parchment); border-top: 1px solid var(--line); color: var(--ink); }
+.music-bar .hint { color: var(--ink-soft); }
+
+/* ---------------------------------------------------------------- Codex */
+.cx-wrap, .cx-modal { background: var(--parchment); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; }
+.cx-wrap input[type=search], .cx-wrap input[type=text], .cx-wrap input[type=number], .cx-wrap textarea, .cx-wrap select,
+.cx-modal input[type=search], .cx-modal input[type=text], .cx-modal input[type=number], .cx-modal textarea, .cx-modal select {
+  background: var(--parchment-dark); color: var(--ink); border: 1px solid var(--line); border-radius: 9px; font-family: var(--font-body);
+}
+.cx-wrap button.secondary, .cx-modal button.secondary { color: var(--ink-soft); border-color: var(--line); }
+.cx-wrap h4, .cx-modal h3 { color: var(--ink); font-family: var(--font-display); }
+.cx-rank { font-family: var(--font-body); font-weight: 700; letter-spacing: 0; text-transform: none; color: #fff; }
+.cx-day { border: 1px solid var(--line); border-radius: 10px; }
+.cx-day:hover { background: var(--lantern-soft); }
+.cx-day.today { background: var(--lantern); color: #1d1305; }
+.cx-day.pick { outline: 2px solid var(--lantern); }
+.cx-evrow { border: 1px solid var(--line-soft); border-radius: 10px; }
+.cx-qitem { border-bottom: 1px solid var(--line-soft); }
+.cx-bar { background: var(--parchment-dark); }
+
+/* ---------------------------------------------------------------- landing */
+.landing-sheet { width: min(470px, 100%); padding: 38px 30px 28px; text-align: center; }
+.landing-title { font-family: var(--font-display); font-weight: 700; font-size: 58px; line-height: 1; letter-spacing: .005em; color: var(--ink); text-shadow: none; }
+.landing-subtitle { color: var(--ink-soft); font-size: 15px; }
+.rpg-divider { color: var(--ink-soft); }
+.rpg-divider::before, .rpg-divider::after { background: var(--line); }
+.role-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.role-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px 14px 18px; text-align: center;
+  background: var(--raise); background-image: none; border: 1px solid var(--line); border-radius: 18px; box-shadow: none; color: var(--ink);
+  transition: transform .25s var(--ease), border-color .2s, box-shadow .3s, background-color .2s;
+}
+.role-tile:hover { transform: translateY(-4px); border-color: var(--lantern); background: var(--raise); box-shadow: 0 16px 34px -14px var(--lantern-glow), 0 0 0 4px var(--lantern-soft); }
+.role-tile-dm, .role-tile-player { border-color: var(--line); }
+.role-tile-icon { font-size: 34px; filter: none; }
+.role-tile-title { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0; text-transform: none; color: var(--ink); }
+.role-tile-desc { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--ink-soft); }
+.landing-flow-title { font-family: var(--font-display); font-size: 21px; letter-spacing: 0; text-transform: none; color: var(--ink); }
+.landing-footer { color: var(--ink-soft); font-style: italic; }
+.error-msg { color: var(--ember); }
+
+/* ================================================================ GERAK ================================================================ */
+@keyframes paneIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes toastIn { from { opacity: 0; transform: translateX(24px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes ignite { from { opacity: 0; } to { opacity: 1; } }
+@keyframes titleLight {
+  0% { opacity: .15; color: var(--ink-soft); text-shadow: none; }
+  55% { opacity: 1; color: var(--ink); text-shadow: 0 0 46px var(--lantern-glow); }
+  100% { opacity: 1; color: var(--ink); text-shadow: 0 0 22px var(--lantern-soft); }
+}
+@keyframes tileRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes turnArrive { 0% { box-shadow: 0 0 0 0 var(--lantern-glow); } 35% { box-shadow: 0 0 0 10px transparent, 0 0 44px var(--lantern-glow); } 100% { box-shadow: 0 0 0 1px var(--lantern) inset, 0 0 26px var(--lantern-glow); } }
+@keyframes logFresh { from { background-color: var(--lantern-soft); box-shadow: inset 3px 0 0 var(--lantern); } to { background-color: transparent; box-shadow: inset 3px 0 0 transparent; } }
+@keyframes tokenSpawn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); } 60% { opacity: 1; transform: translate(-50%, -50%) scale(1.14); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+@keyframes ringPulse { 0% { box-shadow: 0 0 0 0 var(--lantern-glow); } 100% { box-shadow: 0 0 0 18px transparent; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Momen utama: layar "menyala" saat halaman dibuka */
+  body::before { animation: ignite 1.3s ease-out both; }
+  .landing-title { animation: titleLight 1.5s var(--ease) .1s both; }
+  .landing-sheet .role-tile { animation: tileRise .6s var(--ease) both; }
+  .landing-sheet .role-tile:nth-child(1) { animation-delay: .55s; }
+  .landing-sheet .role-tile:nth-child(2) { animation-delay: .7s; }
+
+  /* Menjawab aksi pengguna */
+  div[id^="tab-"] { animation: paneIn .26s var(--ease) both; }
+  .modal-backdrop.show, .cx-overlay { animation: fadeIn .2s ease-out both; }
+  .modal-backdrop.show .modal-box, .cx-modal { animation: modalIn .28s var(--ease) both; }
+  .item-toast .toast-entry { animation: toastIn .38s var(--ease) both; }
+  .battle-row.turn-arrive { animation: turnArrive .8s var(--ease) both; }
+  .chat-log .entry.fresh { animation: logFresh 1.6s ease-out both; }
+  .token.spawn { animation: tokenSpawn .5s var(--ease) both; }
+  .token.glide { transition: left .5s var(--ease), top .5s var(--ease); }
+  .token.mine .token-circle { animation: ringPulse 1.4s ease-out 1; }
+  .landing-flow { animation: paneIn .28s var(--ease) both; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* ---------------------------------------------------------------- HP & layar kecil */
+@media (max-width: 640px) {
+  .sheet { margin: 10px; padding: 14px; border-radius: 16px; }
+  .topbar h1 { font-size: 22px; }
+  .page-tabs button { flex: 1 1 30%; min-width: 90px; padding: 8px 8px; }
+  .page-tabs.sub-tabs button { flex: 1 1 45%; }
+  .panel { padding: 12px; border-radius: 14px; }
+  .panel-header { margin: -12px -12px 10px; font-size: 17px; padding: 9px 14px; }
+  .landing-title { font-size: 46px; }
+  .role-tiles { gap: 10px; }
+}

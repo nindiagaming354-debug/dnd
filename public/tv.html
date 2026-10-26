@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DnD VTT — Layar TV</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #07080b; color: #eee; overflow: hidden; font-family: system-ui, sans-serif; }
+  #tvRoot { display: flex; height: 100vh; width: 100vw; }
+  #tvMapArea { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; position: relative; }
+  #tvSide { width: 300px; background: #0e1015; border-left: 1px solid #262a33; display: flex; flex-direction: column; overflow: hidden; }
+  #tvSide.hidden { display: none; }
+  #tvSide h2 { margin: 0; padding: 12px 14px; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: #d9b96a; border-bottom: 1px solid #262a33; }
+  #tvRound { padding: 8px 14px; font-size: 13px; color: #9aa; border-bottom: 1px solid #262a33; }
+  #tvOrder { flex: 1; overflow-y: auto; padding: 8px; }
+  .tv-entry { display: flex; gap: 8px; align-items: center; padding: 8px; margin-bottom: 6px; border-radius: 8px; background: #151922; border: 2px solid transparent; }
+  .tv-entry.active { border-color: #d9b96a; background: #1f1c10; }
+  .tv-entry.enemy { border-left: 4px solid #e07a6b; }
+  .tv-entry.ally, .tv-entry.pc { border-left: 4px solid #7bd39a; }
+  .tv-entry .nm { font-weight: 600; font-size: 15px; }
+  .tv-entry .bar { height: 7px; border-radius: 4px; background: #2a2f3a; margin-top: 5px; overflow: hidden; }
+  .tv-entry .bar > i { display: block; height: 100%; background: #6fcf8f; }
+  .tv-entry .bar > i.low { background: #e0a14b; }
+  .tv-entry .bar > i.crit { background: #e0584b; }
+  .tv-entry .rl { font-size: 12px; color: #889; min-width: 26px; text-align: center; }
+  .tv-entry .cond { font-size: 11px; color: #e0a14b; margin-top: 3px; }
+  #tvMap { position: relative; display: inline-block; line-height: 0; background: #14161c; overflow: hidden; }
+  #tvMapImg { display: block; width: auto; height: auto; max-width: calc(100vw - 300px); max-height: 100vh; user-select: none; pointer-events: none; }
+  #tvRoot.noside #tvMapImg { max-width: 100vw; }
+  #tvMap.no-image { width: min(70vw, 1100px); aspect-ratio: 16/9; }
+  #tvMapOverlay { position: absolute; inset: 0; }
+  #tvGrid { position: absolute; inset: 0; pointer-events: none; }
+  #tvFog { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #tvMap .token { width: 56px; height: 56px; }
+  #tvMap .token-nametag { font-size: 14px; line-height: 1.25; }
+  #tvDate { position: fixed; right: 14px; top: 10px; font-size: 14px; padding: 4px 12px; border-radius: 12px; background: #000a; color: #f2d98b; z-index: 60; display: none; }
+  #tvHelp { position: fixed; right: 12px; bottom: 10px; font-size: 11px; color: #667; z-index: 50; }
+  #tvStatus { position: fixed; left: 12px; top: 10px; font-size: 12px; padding: 4px 10px; border-radius: 12px; background: #000a; z-index: 60; }
+  #tvStatus.ok { color: #7bd39a; } #tvStatus.bad { color: #e0584b; }
+  #tvScene { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #000c; z-index: 40; text-align: center; padding: 6vw; }
+  #tvScene.show { display: flex; }
+  #tvScene .box { max-width: 900px; }
+  #tvScene h1 { font-size: clamp(32px, 5vw, 72px); margin: 0 0 14px; color: #f2d98b; text-shadow: 0 2px 20px #000; }
+  #tvScene p { font-size: clamp(18px, 2.2vw, 30px); line-height: 1.4; margin: 0; }
+  #tvScene img { max-width: 80vw; max-height: 50vh; border-radius: 10px; margin-bottom: 18px; }
+  #tvDialogue { position: fixed; left: 50%; bottom: 3vh; transform: translateX(-50%); width: min(1000px, 92vw); display: none; gap: 16px; align-items: center; background: #0b0d12ee; border: 2px solid #d9b96a; border-radius: 14px; padding: 16px 20px; z-index: 45; }
+  #tvDialogue.show { display: flex; }
+  #tvDialogue img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; }
+  #tvDialogue .who { color: #f2d98b; font-weight: 700; font-size: 20px; margin-bottom: 4px; }
+  #tvDialogue .txt { font-size: clamp(16px, 2vw, 26px); line-height: 1.4; }
+  #tvJoin { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #07080b; z-index: 100; }
+  #tvJoin .card { background: #11141b; padding: 28px; border-radius: 14px; width: 320px; text-align: center; }
+  #tvJoin input { width: 100%; box-sizing: border-box; padding: 12px; font-size: 22px; text-align: center; letter-spacing: .3em; text-transform: uppercase; margin: 12px 0; border-radius: 8px; border: 1px solid #333; background: #0b0d12; color: #fff; }
+  #tvJoin button { width: 100%; padding: 12px; font-size: 16px; border: 0; border-radius: 8px; background: #d9b96a; color: #1a1405; font-weight: 700; cursor: pointer; }
+</style>
+<script>document.documentElement.dataset.theme="dark";</script>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div id="tvJoin">
+  <div class="card">
+    <h2 style="margin:0 0 4px;">📺 Layar TV</h2>
+    <p style="margin:0; color:#99a; font-size:13px;">Masukkan kode sesi dari DM</p>
+    <input id="tvCode" maxlength="5" placeholder="KODE" autofocus>
+    <button id="tvGo">Tampilkan</button>
+    <p id="tvErr" style="color:#e0584b; font-size:13px; min-height:18px; margin:10px 0 0;"></p>
+  </div>
+</div>
+
+<div id="tvStatus" class="bad">memutus…</div>
+<div id="tvDate"></div>
+<div id="tvRoot">
+  <div id="tvMapArea">
+    <div id="tvMap" class="no-image">
+      <img id="tvMapImg" src="" alt="" style="display:none;">
+      <div id="tvMapOverlay">
+        <div id="tvGrid"></div>
+        <canvas id="tvFog" style="display:none;"></canvas>
+      </div>
+    </div>
+  </div>
+  <aside id="tvSide">
+    <h2>⚔ Urutan Giliran</h2>
+    <div id="tvRound"></div>
+    <div id="tvOrder"></div>
+  </aside>
+</div>
+
+<div id="tvScene"><div class="box"><img id="tvSceneImg" alt="" style="display:none;"><h1 id="tvSceneTitle"></h1><p id="tvSceneDesc"></p></div></div>
+<div id="tvDialogue"><img id="tvDlgImg" alt="" style="display:none;"><div><div class="who" id="tvDlgWho"></div><div class="txt" id="tvDlgTxt"></div></div></div>
+<div id="tvHelp">Tekan <b>F</b> = layar penuh · <b>S</b> = sembunyikan/tampilkan daftar giliran</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/mapmedia.js"></script>
+<script src="/lighting.js"></script>
+<script>
+(function () {
+  const FOG_COLS = 30, FOG_ROWS = 20; // sama dengan sisi DM & player
+  const socket = io();
+  let CODE = '';
+  const st = { map: {}, tokens: {}, battle: { entries: {}, turn: {} }, story: {} };
+
+  const $ = (id) => document.getElementById(id);
+  const img = $('tvMapImg'), wrap = $('tvMap'), grid = $('tvGrid'), fog = $('tvFog');
+
+  function setStatus(ok, txt) { const s = $('tvStatus'); s.className = ok ? 'ok' : 'bad'; s.textContent = txt; }
+
+  // ---------- Peta ----------
+  function renderMap() {
+    const map = st.map || {};
+    MapMedia.apply(img, map.imageUrl);
+    fitMap();
+    if (map.imageUrl) wrap.classList.remove('no-image'); else wrap.classList.add('no-image');
+    const size = map.gridSize || 50;
+    grid.style.backgroundImage = map.gridVisible
+      ? `repeating-linear-gradient(0deg, rgba(220,190,120,.55) 0 1px, transparent 1px ${size}px),
+         repeating-linear-gradient(90deg, rgba(220,190,120,.55) 0 1px, transparent 1px ${size}px)`
+      : 'none';
+    renderFog();
+    applySpot();
+  }
+  function applySpot() {
+    if (window.Lighting) Lighting.applySpotlight([img, $('tvMapOverlay')], wrap.offsetWidth, wrap.offsetHeight, st.map);
+  }
+  // Peta selalu diperbesar/diperkecil agar pas mengisi area layar (gambar kecil & video tidak tinggal mungil di TV).
+  function fitMap() {
+    const nw = img.naturalWidth, nh = img.naturalHeight;
+    if (!nw || !nh || img.style.display === 'none') { img.style.width = ''; return; }
+    const availW = window.innerWidth - ($('tvSide').classList.contains('hidden') ? 0 : 300);
+    const sc = Math.min(availW / nw, window.innerHeight / nh);
+    img.style.maxWidth = 'none'; img.style.maxHeight = 'none';
+    img.style.width = Math.max(50, Math.floor(nw * sc)) + 'px';
+  }
+  img.addEventListener('load', () => { fitMap(); renderFog(); applySpot(); });
+  window.addEventListener('resize', () => { fitMap(); renderFog(); applySpot(); });
+
+  let tvVis = null;
+  function renderFog() {
+    const map = st.map || {};
+    tvVis = null;
+    if (window.Lighting && Lighting.enabled(map)) {
+      fog.style.display = '';
+      fog.width = wrap.offsetWidth || 800; fog.height = wrap.offsetHeight || 450;
+      tvVis = Lighting.render({ canvas: fog, map, tokens: st.tokens, mode: 'player', key: 'tv_' + CODE + '_' + (map.id || 'main') });
+      renderTokens();
+      return;
+    }
+    if (!map.fogVisible) { fog.style.display = 'none'; renderTokens(); return; }
+    fog.style.display = '';
+    const w = wrap.offsetWidth || 800, h = wrap.offsetHeight || 450;
+    fog.width = w; fog.height = h;
+    const ctx = fog.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(8,8,12,0.97)';
+    ctx.fillRect(0, 0, w, h);
+    const cw = w / FOG_COLS, ch = h / FOG_ROWS;
+    ctx.globalCompositeOperation = 'destination-out';
+    Object.keys(map.fogRevealed || {}).forEach(key => {
+      const [c, r] = key.split(',').map(Number);
+      ctx.fillRect(c * cw, r * ch, cw + 1, ch + 1);
+    });
+    ctx.globalCompositeOperation = 'source-over';
+    renderTokens();
+  }
+
+  function renderTokens() {
+    $('tvMapOverlay').querySelectorAll('.token').forEach(el => el.remove());
+    const map = st.map || {};
+    const fogOn = !!map.fogVisible, revealed = map.fogRevealed || {};
+    Object.values(st.tokens || {}).forEach(tok => {
+      // Aturan sama seperti layar player: token milik DM (musuh/NPC) di area gelap disembunyikan.
+      if (tvVis && !tok.ownerId) {
+        if (!tvVis.isVisible(parseFloat(tok.x) || 0, parseFloat(tok.y) || 0)) return;
+      } else if (fogOn && !tvVis && !tok.ownerId) {
+        const col = Math.min(FOG_COLS - 1, Math.max(0, Math.floor((parseFloat(tok.x) || 0) / 100 * FOG_COLS)));
+        const row = Math.min(FOG_ROWS - 1, Math.max(0, Math.floor((parseFloat(tok.y) || 0) / 100 * FOG_ROWS)));
+        if (!revealed[col + ',' + row]) return;
+      }
+      const el = document.createElement('div');
+      el.className = 'token';
+      el.style.left = tok.x + '%'; el.style.top = tok.y + '%';
+      const tag = document.createElement('div');
+      tag.className = 'token-nametag'; tag.textContent = tok.label || '';
+      el.appendChild(tag);
+      const circle = document.createElement('div');
+      circle.className = 'token-circle';
+      circle.style.background = tok.imageUrl ? 'transparent' : (tok.color || '#555');
+      if ((tok.type || tok.tokenType) === 'enemy') circle.style.borderColor = '#e07a6b';
+      else if ((tok.type || tok.tokenType) === 'ally') circle.style.borderColor = '#7bd39a';
+      if (tok.imageUrl) {
+        const im = document.createElement('img');
+        im.src = tok.imageUrl; im.className = 'token-img'; im.draggable = false;
+        circle.appendChild(im);
+      } else circle.textContent = (tok.label || '').slice(0, 2);
+      el.appendChild(circle);
+      $('tvMapOverlay').appendChild(el);
+    });
+  }
+
+  // ---------- Battle ----------
+  function sortedEntries() {
+    return Object.values((st.battle && st.battle.entries) || {}).sort((a, b) => {
+      const rb = parseFloat(b.roll) || 0, ra = parseFloat(a.roll) || 0;
+      if (rb !== ra) return rb - ra;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function renderBattle() {
+    const list = sortedEntries();
+    const turn = (st.battle && st.battle.turn) || {};
+    $('tvRound').textContent = list.length ? `Ronde ${turn.round || 1}` : 'Belum ada battle.';
+    $('tvOrder').innerHTML = list.map(e => {
+      const hp = parseFloat(e.hp_current), mx = parseFloat(e.hp_max);
+      const pct = (!mx || isNaN(mx)) ? 0 : Math.max(0, Math.min(100, (isNaN(hp) ? mx : hp) / mx * 100));
+      const cls = pct <= 25 ? 'crit' : pct <= 50 ? 'low' : '';
+      const conds = (e.conditions || []).length ? `<div class="cond">${esc(e.conditions.join(', '))}</div>` : '';
+      const hpTxt = (mx && !isNaN(mx)) ? `<div style="font-size:11px;color:#889;">HP ${isNaN(hp) ? mx : hp}/${mx}</div>` : '';
+      return `<div class="tv-entry ${esc(e.type)} ${e.id === turn.activeId ? 'active' : ''}">
+        <div class="rl">${esc(e.roll)}</div>
+        <div style="flex:1; min-width:0;"><div class="nm">${e.id === turn.activeId ? '▶ ' : ''}${esc(e.name)}</div>
+        <div class="bar"><i class="${cls}" style="width:${pct}%"></i></div>${hpTxt}${conds}</div></div>`;
+    }).join('');
+  }
+
+  // ---------- Cerita (banner & dialog) ----------
+  function renderScene() {
+    const sc = (st.story && st.story.scene) || {};
+    const box = $('tvScene');
+    if (sc.active) {
+      $('tvSceneTitle').textContent = sc.title || '';
+      $('tvSceneDesc').textContent = sc.desc || '';
+      const im = $('tvSceneImg');
+      if (sc.imageUrl) { im.src = sc.imageUrl; im.style.display = ''; } else { im.style.display = 'none'; im.removeAttribute('src'); }
+      box.classList.add('show');
+    } else box.classList.remove('show');
+  }
+  function renderDialogue() {
+    const d = (st.story && st.story.dialogue) || {};
+    const box = $('tvDialogue');
+    if (d.active) {
+      $('tvDlgWho').textContent = d.npcName || 'NPC';
+      $('tvDlgTxt').textContent = d.text || '';
+      const im = $('tvDlgImg');
+      if (d.npcPortrait) { im.src = d.npcPortrait; im.style.display = ''; } else { im.style.display = 'none'; im.removeAttribute('src'); }
+      box.classList.add('show');
+    } else box.classList.remove('show');
+  }
+
+  function renderDate() {
+    const c = st.calendar, el = $('tvDate');
+    if (!c || !c.months || !c.months[c.month]) { el.style.display = 'none'; return; }
+    el.textContent = '📅 ' + c.day + ' ' + c.months[c.month].name + ', Tahun ' + c.year;
+    el.style.display = 'block';
+    if (!$('tvSide').classList.contains('hidden')) el.style.right = '314px'; else el.style.right = '14px';
+  }
+  function applyAll() { renderDate(); renderMap(); renderBattle(); renderScene(); renderDialogue(); }
+
+  // ---------- Socket ----------
+  socket.on('map-updated', (m) => { st.map = m; renderMap(); });
+  socket.on('tokens-updated', (t) => { st.tokens = t; if (window.Lighting && Lighting.enabled(st.map)) renderFog(); else renderTokens(); });
+  window.addEventListener('lighting:restored', () => { if (window.Lighting && Lighting.enabled(st.map)) renderFog(); });
+  socket.on('battle-updated', (b) => { st.battle = b; renderBattle(); });
+  socket.on('scene-updated', (s) => { st.story.scene = s; renderScene(); });
+  socket.on('dialogue-updated', (d) => { st.story.dialogue = d; renderDialogue(); });
+  socket.on('calendar-update', (c) => { st.calendar = c; renderDate(); });
+  socket.on('disconnect', () => setStatus(false, 'terputus — mencoba lagi…'));
+  socket.on('connect', () => { if (CODE) join(true); });
+
+  function join(silent) {
+    socket.emit('tv:join', { code: CODE }, (res) => {
+      if (!res || !res.ok) {
+        if (!silent) $('tvErr').textContent = (res && res.error) || 'Gagal masuk.';
+        setStatus(false, 'sesi tidak ditemukan');
+        return;
+      }
+      Object.assign(st, { map: res.state.map, tokens: res.state.tokens, battle: res.state.battle, story: res.state.story || {}, calendar: res.state.calendar });
+      $('tvJoin').style.display = 'none';
+      setStatus(true, 'tersambung · ' + CODE);
+      try { localStorage.setItem('dnd_tv_code', CODE); } catch (e) {}
+      applyAll();
+    });
+  }
+
+  function start() {
+    CODE = ($('tvCode').value || '').toUpperCase().trim();
+    if (CODE.length < 4) { $('tvErr').textContent = 'Kode belum lengkap.'; return; }
+    join(false);
+  }
+  $('tvGo').addEventListener('click', start);
+  $('tvCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') start(); });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    }
+    if (e.key === 's' || e.key === 'S') {
+      $('tvSide').classList.toggle('hidden');
+      $('tvRoot').classList.toggle('noside');
+      fitMap(); renderFog(); renderDate();
+    }
+  });
+
+  // Kode dari URL (?code=XXXXX) atau dari kunjungan sebelumnya
+  const q = new URLSearchParams(location.search).get('code');
+  let saved = ''; try { saved = localStorage.getItem('dnd_tv_code') || ''; } catch (e) {}
+  const pre = (q || saved || '').toUpperCase();
+  if (pre) { $('tvCode').value = pre; if (q) start(); }
+})();
+</script>
+<script src="/fx.js"></script>
+</body>
+</html>
